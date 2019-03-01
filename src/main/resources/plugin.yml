@@ -1,0 +1,5 @@
+name: BlockInfoStorage
+version: '${minecraft.plugin.version}'
+main: de.minebench.blockinfostorage.BlockInfoStorage
+author: Phoenix616
+description: '${project.description}'
