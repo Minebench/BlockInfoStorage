@@ -19,6 +19,7 @@ package de.minebench.blockinfostorage;
  */
 
 import org.bukkit.Chunk;
+import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -81,6 +82,16 @@ public class BlockInfoStorage extends JavaPlugin implements Listener {
     }
 
     /**
+     * Set block info
+     * @param location  The location of the block to attach the info to
+     * @param key       The key to set
+     * @param value     The value to set
+     */
+    public void setBlockInfo(Location location, NamespacedKey key, Object value) {
+        getRegion(location).setInfo(location.getBlockX(), location.getBlockY(), location.getBlockZ(), key, value);
+    }
+
+    /**
      * Get information from a block. This is only for reading, use {@link #setBlockInfo(Block, NamespacedKey, Object)} for writing!
      * @param block     The block to attach the info to
      * @param plugin    The plugin for the info
@@ -92,7 +103,17 @@ public class BlockInfoStorage extends JavaPlugin implements Listener {
 
     /**
      * Get information from a block. This is only for reading, use {@link #setBlockInfo(Block, NamespacedKey, Object)} for writing!
-     * @param block The block to attach the info to
+     * @param location  The location of the block to get the info from
+     * @param plugin    The plugin for the info
+     * @return All the info that the plugin assigned to the block or null if none was found
+     */
+    public ConfigurationSection getBlockInfo(Location location, Plugin plugin) {
+        return getBlockInfo(location, plugin.getName());
+    }
+
+    /**
+     * Get information from a block. This is only for reading, use {@link #setBlockInfo(Block, NamespacedKey, Object)} for writing!
+     * @param block The block to get the info from
      * @param type  The type of info to get
      * @return All the info of that type that is assigned to the block or null if none was found
      */
@@ -102,12 +123,32 @@ public class BlockInfoStorage extends JavaPlugin implements Listener {
 
     /**
      * Get information from a block. This is only for reading, use {@link #setBlockInfo(Block, NamespacedKey, Object)} for writing!
-     * @param block The block to attach the info to
+     * @param location  The location of the block to get the info from
+     * @param type      The type of info to get
+     * @return All the info of that type that is assigned to the block or null if none was found
+     */
+    public ConfigurationSection getBlockInfo(Location location, String type) {
+        return getRegion(location).getInfo(location.getBlockX(), location.getBlockY(), location.getBlockZ(), type.toLowerCase(Locale.ENGLISH));
+    }
+
+    /**
+     * Get information from a block. This is only for reading, use {@link #setBlockInfo(Block, NamespacedKey, Object)} for writing!
+     * @param block The block to get the info from
      * @param key   The namespaced key for the info to get
      * @return The info value assigned to the block or null if none was found
      */
     public Object getBlockInfoValue(Block block, NamespacedKey key) {
         return getRegion(block).getInfoValue(block.getX(), block.getY(), block.getZ(), key);
+    }
+
+    /**
+     * Get information from a block. This is only for reading, use {@link #setBlockInfo(Block, NamespacedKey, Object)} for writing!
+     * @param location  The location of the block to get the info from
+     * @param key       The namespaced key for the info to get
+     * @return The info value assigned to the block or null if none was found
+     */
+    public Object getBlockInfoValue(Location location, NamespacedKey key) {
+        return getRegion(location).getInfoValue(location.getBlockX(), location.getBlockY(), location.getBlockZ(), key);
     }
 
     /**
@@ -121,11 +162,29 @@ public class BlockInfoStorage extends JavaPlugin implements Listener {
 
     /**
      * Remove block info
+     * @param location  The location of the block the info is attached to
+     * @param plugin    The plugin which's info to remove
+     */
+    public void removeBlockInfo(Location location, Plugin plugin) {
+        removeBlockInfo(location, plugin.getName());
+    }
+
+    /**
+     * Remove block info
      * @param block The block the info is attached to
      * @param key   The key to remove
      */
     public void removeBlockInfo(Block block, NamespacedKey key) {
         getRegion(block).removeInfo(block.getX(), block.getZ(), block.getY(), key.getNamespace() + "." + key.getKey());
+    }
+
+    /**
+     * Remove block info
+     * @param location  The location of the block the info is attached to
+     * @param key       The key to remove
+     */
+    public void removeBlockInfo(Location location, NamespacedKey key) {
+        getRegion(location).removeInfo(location.getBlockX(), location.getBlockY(), location.getBlockZ(), key.getNamespace() + "." + key.getKey());
     }
 
     /**
@@ -138,11 +197,28 @@ public class BlockInfoStorage extends JavaPlugin implements Listener {
     }
 
     /**
+     * Remove block info
+     * @param location  The location of the block the info is attached to
+     * @param type      The type to remove
+     */
+    public void removeBlockInfo(Location location, String type) {
+        getRegion(location).removeInfo(location.getBlockX(), location.getBlockY(), location.getBlockZ(), type.toLowerCase(Locale.ENGLISH));
+    }
+
+    /**
      * Remove all block info (TODO: Decide whether or not this is too dangerous to expose)
-     * @param block The block info was attached to
+     * @param block     The block info is attached to
      */
     public void removeBlockInfo(Block block) {
         getRegion(block).removeInfo(block.getX(), block.getY(), block.getZ());
+    }
+
+    /**
+     * Remove all block info (TODO: Decide whether or not this is too dangerous to expose)
+     * @param location  The location of the block info is attached to
+     */
+    public void removeBlockInfo(Location location) {
+        getRegion(location).removeInfo(location.getBlockX(), location.getBlockY(), location.getBlockZ());
     }
 
     // --- Events ---
@@ -255,6 +331,13 @@ public class BlockInfoStorage extends JavaPlugin implements Listener {
         }
     }
 
+    private Region getRegion(Location loc) {
+        Region.Location location = getRegionLocation(loc);
+        synchronized (location) {
+            return load(location);
+        }
+    }
+
     private Region.Location getRegionLocation(World world, int x, int z) {
         synchronized (regionLocs) {
             return regionLocs.computeIfAbsent(world.getUID(), k -> new HashMap<>())
@@ -269,5 +352,9 @@ public class BlockInfoStorage extends JavaPlugin implements Listener {
 
     private Region.Location getRegionLocation(Block block) {
         return getRegionLocation(block.getWorld(), block.getX() >> 9, block.getZ() >> 9);
+    }
+
+    private Region.Location getRegionLocation(Location location) {
+        return getRegionLocation(location.getWorld(), location.getBlockX() >> 9, location.getBlockZ() >> 9);
     }
 }
