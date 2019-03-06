@@ -129,9 +129,14 @@ class Region {
     void removeInfo(int x, int y, int z) {
         ensureLoaded();
         config.set(x + "." + y + "." + z, null);
-        if (config.getConfigurationSection(x + "." + y).getKeys(false).isEmpty()) {
+        ConfigurationSection section = config.getConfigurationSection(x + "." + y);
+        if (section == null) {
+            return;
+        }
+        if (section.getKeys(false).isEmpty()) {
             config.set(x + "." + y, null);
-            if (config.getConfigurationSection(String.valueOf(x)).getKeys(false).isEmpty()) {
+            section = config.getConfigurationSection(String.valueOf(x));
+            if (section != null && section.getKeys(false).isEmpty()) {
                 config.set(String.valueOf(x), null);
             }
         }
@@ -140,8 +145,12 @@ class Region {
 
     void removeInfo(int x, int z, int y, String key) {
         ensureLoaded();
-        config.set(x + "." + y + "." + z + "." + key, null);
-        if (config.getConfigurationSection(x + "." + y + "." + z).getKeys(false).isEmpty()) {
+        ConfigurationSection section = config.getConfigurationSection(x + "." + y + "." + z);
+        if (section == null) {
+            return;
+        }
+        section.set(key, null);
+        if (section.getKeys(false).isEmpty()) {
             removeInfo(x, y, z);
         }
         modified = true;
