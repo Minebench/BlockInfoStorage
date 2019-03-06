@@ -99,7 +99,7 @@ class Region {
         }
 
         File configFile = getConfigFile();
-        configFile.mkdirs();
+        configFile.getParentFile().mkdirs();
         config.save(configFile);
         modified = false;
     }
