@@ -178,5 +178,17 @@ class Region {
             result = 31 * result + z;
             return result;
         }
+
+        public UUID getWorldId() {
+            return worldId;
+        }
+
+        public int getX() {
+            return x;
+        }
+
+        public int getZ() {
+            return z;
+        }
     }
 }

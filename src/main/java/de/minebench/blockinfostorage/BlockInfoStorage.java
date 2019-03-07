@@ -61,6 +61,13 @@ public class BlockInfoStorage extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(this, this);
     }
 
+    @Override
+    public void onDisable() {
+        for (Region region : dataMap.values()) {
+            save(region);
+        }
+    }
+
     // --- "API" ---
 
     /**
@@ -264,7 +271,9 @@ public class BlockInfoStorage extends JavaPlugin implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     private void onWorldSave(WorldSaveEvent event) {
         for (Region region : dataMap.values()) {
-            save(region);
+            if (region.getLocation().getWorldId().equals(event.getWorld().getUID())) {
+                save(region);
+            }
         }
     }
 
