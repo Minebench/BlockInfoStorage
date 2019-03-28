@@ -36,6 +36,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.event.world.WorldSaveEvent;
+import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -43,6 +44,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -270,10 +272,21 @@ public class BlockInfoStorage extends JavaPlugin implements Listener {
      */
     @EventHandler(priority = EventPriority.MONITOR)
     private void onWorldSave(WorldSaveEvent event) {
-        for (Region region : dataMap.values()) {
-            if (region.getLocation().getWorldId().equals(event.getWorld().getUID())) {
-                save(region);
-            }
+        Map<Integer, Map<Integer, Region.Location>> regions = regionLocs.get(event.getWorld().getUID());
+        if (regions != null) {
+            regions.values().stream().flatMap(m -> m.values().stream()).map(dataMap::get).filter(Objects::nonNull).forEach(this::save);
+        }
+    }
+
+    /**
+     * Save chunk data to disk and unload existing data
+     */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    private void onWorldUnload(WorldUnloadEvent event) {
+        Map<Integer, Map<Integer, Region.Location>> regions = regionLocs.get(event.getWorld().getUID());
+        if (regions != null) {
+            regions.values().stream().flatMap(m -> m.values().stream()).map(dataMap::remove).filter(Objects::nonNull).forEach(this::save);
+            regionLocs.remove(event.getWorld().getUID());
         }
     }
 
