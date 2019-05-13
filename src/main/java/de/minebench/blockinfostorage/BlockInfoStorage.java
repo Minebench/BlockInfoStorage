@@ -30,6 +30,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockFadeEvent;
+import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -313,12 +314,19 @@ public class BlockInfoStorage extends JavaPlugin implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    private void on(BlockFromToEvent event) {
+        removeBlockInfo(event.getBlock());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void on(BlockPistonExtendEvent event) {
+        event.getBlocks().forEach(this::removeBlockInfo);
         // TODO: Block info moving?
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void on(BlockPistonRetractEvent event) {
+        event.getBlocks().forEach(this::removeBlockInfo);
         // TODO: Block info moving?
     }
 
