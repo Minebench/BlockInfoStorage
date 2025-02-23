@@ -241,9 +241,10 @@ public class BlockInfoStorage extends JavaPlugin implements Listener {
         Region.Location location = getRegionLocation(event.getChunk());
         synchronized (location) {
             if (!dataMap.containsKey(location)) {
+                Region region = getOrCreateRegion(location);
                 getServer().getScheduler().runTaskAsynchronously(this, () -> {
                     synchronized (location) {
-                        load(location).notifyLoad(event.getChunk().getX(), event.getChunk().getZ());
+                        load(location, region).notifyLoad(event.getChunk().getX(), event.getChunk().getZ());
                     }
                 });
             }
@@ -332,13 +333,19 @@ public class BlockInfoStorage extends JavaPlugin implements Listener {
 
     // --- Internal utility methods ---
 
-    private Region load(Region.Location location) {
+    private Region getOrCreateRegion(Region.Location location) {
         Region region = dataMap.get(location);
         if (region != null) {
             return region;
         }
-        region = new Region(location);
+        return new Region(location);
+    }
 
+    private Region load(Region.Location location) {
+        return load(location, getOrCreateRegion(location));
+    }
+
+    private Region load(Region.Location location, Region region) {
         // load data from file
         region.load();
 

@@ -34,7 +34,9 @@ import java.util.UUID;
 class Region {
 
     private final Location location;
-    private Map<Integer, Integer> loaded = new HashMap<>();
+    private final File configFile;
+
+    private final Map<Integer, Integer> loaded = new HashMap<>();
 
     private boolean modified = false;
 
@@ -42,6 +44,11 @@ class Region {
 
     Region(Location location) {
         this.location = location;
+        World world = Bukkit.getWorld(location.worldId);
+        if (world == null) {
+            throw new IllegalStateException("Could not find world with ID " + location.worldId + "?");
+        }
+        this.configFile = new File(new File(world.getWorldFolder(), "blockinfo"), "bi." + location.x + "." + location.z + ".yml");
     }
 
     /**
@@ -86,11 +93,7 @@ class Region {
     }
 
     private File getConfigFile() {
-        World world = Bukkit.getWorld(location.worldId);
-        if (world == null) {
-            throw new IllegalStateException("Could not find world with ID " + location.worldId + "?");
-        }
-        return new File(new File(world.getWorldFolder(), "blockinfo"), "bi." + location.x + "." + location.z + ".yml");
+        return configFile;
     }
 
     synchronized void save() throws IOException {
